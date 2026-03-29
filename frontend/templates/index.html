@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Home — AI Financial News Analyzer{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero {
+    text-align: center;
+    padding: 4rem 1rem 3rem;
+    position: relative;
+}
+.hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.2s ease forwards;
+}
+.hero-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 1.25rem;
+    background: linear-gradient(120deg, #fff 0%, var(--accent) 50%, var(--accent2) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.35s ease forwards;
+}
+.hero-sub {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    max-width: 520px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.7;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.5s ease forwards;
+}
+.hero-ctas {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.65s ease forwards;
+}
+@keyframes fadeUp {
+    from { opacity:0; transform:translateY(18px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+
+/* feature grid */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 3rem;
+}
+.feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+    color: var(--text);
+}
+.feature-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0,229,255,0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.feature-card:hover { border-color: var(--border-hover); box-shadow: var(--glow); transform: translateY(-5px); color: var(--text); }
+.feature-card:hover::before { opacity: 1; }
+
+.feature-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+.feature-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 0.4rem; }
+.feature-desc  { color: var(--text-muted); font-size: 0.875rem; line-height: 1.6; }
+.feature-arrow { position: absolute; top: 1.25rem; right: 1.25rem; color: var(--text-muted); font-size: 0.75rem; transition: all 0.2s; }
+.feature-card:hover .feature-arrow { color: var(--accent); transform: translate(2px,-2px); }
+
+/* stats bar */
+.stats-bar {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 3rem;
+}
+.stat-item { text-align: center; }
+.stat-value { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; font-family: var(--font-mono); }
+
+/* tech stack */
+.tech-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-family: var(--font-mono); font-size: 0.75rem;
+    background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.25); color: #a78bfa;
+    margin: 3px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="hero">
+    <div class="hero-eyebrow">⚡ Real-time AI-powered analysis</div>
+    <h1 class="hero-title">Financial News<br>Intelligence System</h1>
+    <p class="hero-sub">Analyze market sentiment, track companies, and get instant AI-powered insights from the latest financial news.</p>
+    <div class="hero-ctas">
+        <a href="/news" class="btn btn-primary btn-lg"><i class="fas fa-bolt me-2"></i>Analyze News</a>
+        <a href="/chatbot" class="btn btn-outline-accent btn-lg"><i class="fas fa-robot me-2"></i>Ask AI</a>
+    </div>
+</div>
+
+<!-- Stats bar -->
+<div class="stats-bar mb-4">
+    <div class="stat-item"><div class="stat-value">8+</div><div class="stat-label">Articles / Fetch</div></div>
+    <div class="stat-item"><div class="stat-value">20+</div><div class="stat-label">Stock Tickers</div></div>
+    <div class="stat-item"><div class="stat-value">&lt;1s</div><div class="stat-label">Response Time</div></div>
+    <div class="stat-item"><div class="stat-value">3</div><div class="stat-label">Sentiment Signals</div></div>
+</div>
+
+<!-- Feature cards -->
+<div class="feature-grid">
+    <a href="/news" class="feature-card">
+        <div class="feature-icon" style="background:rgba(0,229,255,0.12);">📰</div>
+        <div class="feature-title">News Analysis</div>
+        <div class="feature-desc">AI-powered sentiment classification on real-time financial headlines using Groq LLaMA.</div>
+        <i class="fas fa-arrow-up-right feature-arrow"></i>
+    </a>
+    <a href="/dashboard" class="feature-card">
+        <div class="feature-icon" style="background:rgba(124,58,237,0.12);">📊</div>
+        <div class="feature-title">Analytics Dashboard</div>
+        <div class="feature-desc">Interactive Plotly charts showing sentiment distribution and sector breakdowns.</div>
+        <i class="fas fa-arrow-up-right feature-arrow"></i>
+    </a>
+    <a href="/companies" class="feature-card">
+        <div class="feature-icon" style="background:rgba(16,185,129,0.12);">🏢</div>
+        <div class="feature-title">Company Tracker</div>
+        <div class="feature-desc">Automatic NLP detection of AAPL, META, GS, TSLA and 20+ other stock tickers.</div>
+        <i class="fas fa-arrow-up-right feature-arrow"></i>
+    </a>
+    <a href="/chatbot" class="feature-card">
+        <div class="feature-icon" style="background:rgba(245,158,11,0.12);">🤖</div>
+        <div class="feature-title">RAG Chatbot</div>
+        <div class="feature-desc">Ask any market question and get context-aware answers grounded in the latest news.</div>
+        <i class="fas fa-arrow-up-right feature-arrow"></i>
+    </a>
+</div>
+
+<!-- Tech stack -->
+<div class="card">
+    <div class="card-header"><i class="fas fa-layer-group text-accent me-2"></i>Tech Stack</div>
+    <div class="card-body">
+        <div>
+            <span class="tech-chip"><i class="fas fa-server"></i> FastAPI</span>
+            <span class="tech-chip"><i class="fas fa-brain"></i> Groq LLaMA</span>
+            <span class="tech-chip"><i class="fas fa-flask"></i> Flask</span>
+            <span class="tech-chip"><i class="fas fa-chart-bar"></i> Plotly.js</span>
+            <span class="tech-chip"><i class="fas fa-code"></i> Bootstrap 5</span>
+            <span class="tech-chip"><i class="fab fa-python"></i> Python</span>
+            <span class="tech-chip"><i class="fas fa-spider"></i> BeautifulSoup</span>
+            <span class="tech-chip"><i class="fas fa-robot"></i> RAG Pipeline</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

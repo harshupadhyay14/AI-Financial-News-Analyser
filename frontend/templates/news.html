@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}News — AI Financial News Analyzer{% endblock %}
+
+{% block extra_css %}
+<style>
+.article-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    border-left: 3px solid var(--accent);
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+.article-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(0,229,255,0.03), transparent);
+    pointer-events: none;
+}
+.article-card:hover {
+    border-color: var(--border-hover);
+    border-left-color: var(--accent);
+    box-shadow: var(--glow);
+    transform: translateX(4px);
+}
+.article-card.bearish  { border-left-color: #ef4444; }
+.article-card.neutral  { border-left-color: #f59e0b; }
+.article-card.bullish  { border-left-color: #10b981; }
+
+.article-num {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+}
+.article-title {
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+}
+.article-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 0.75rem; }
+.article-analysis {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+.confidence-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.08);
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+.confidence-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.8s ease;
+}
+
+.filter-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
+    user-select: none;
+}
+.filter-pill input { display: none; }
+.filter-pill.f-bull { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #10b981; }
+.filter-pill.f-bear { background: rgba(239,68,68,0.1);  border-color: rgba(239,68,68,0.3);  color: #ef4444; }
+.filter-pill.f-neut { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: #f59e0b; }
+.filter-pill.inactive { opacity: 0.35; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title"><i class="fas fa-newspaper me-2"></i>Financial News Analysis</h1>
+
+<div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+    <button id="fetchBtn" class="btn btn-primary">
+        <i class="fas fa-sync-alt me-2"></i>Fetch Latest News
+    </button>
+    <span id="fetchStatus" style="color:var(--text-muted); font-family:var(--font-mono); font-size:0.82rem;"></span>
+</div>
+
+<div id="loadingSpinner" class="loading">
+    <div class="spinner"></div>
+    <p>FETCHING & ANALYSING NEWS...</p>
+</div>
+
+<div id="errorMsg"   class="error-message   mb-3" style="display:none;"></div>
+<div id="successMsg" class="success-message mb-3" style="display:none;"></div>
+
+<!-- filters -->
+<div id="filterSection" style="display:none;" class="mb-4">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);letter-spacing:1px;">FILTER:</span>
+        <label class="filter-pill f-bull" id="pill-bull"><input type="checkbox" class="sentiment-filter" value="Bullish" checked>📈 Bullish</label>
+        <label class="filter-pill f-neut" id="pill-neut"><input type="checkbox" class="sentiment-filter" value="Neutral" checked>➡️ Neutral</label>
+        <label class="filter-pill f-bear" id="pill-bear"><input type="checkbox" class="sentiment-filter" value="Bearish" checked>📉 Bearish</label>
+        <span id="articleCount" style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted);margin-left:auto;"></span>
+    </div>
+</div>
+
+<div id="newsContainer"></div>
+
+<script>
+const API_BASE = '/api';
+
+document.getElementById('fetchBtn').addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Fetching...';
+
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('errorMsg').style.display = 'none';
+    document.getElementById('successMsg').style.display = 'none';
+    document.getElementById('newsContainer').innerHTML = '';
+    document.getElementById('filterSection').style.display = 'none';
+
+    try {
+        const res = await fetch(`${API_BASE}/news`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        window.newsData = data;
+        document.getElementById('successMsg').innerHTML = `<i class="fas fa-check-circle me-2"></i>Fetched and analysed <strong>${data.length}</strong> articles successfully.`;
+        document.getElementById('successMsg').style.display = 'block';
+        document.getElementById('filterSection').style.display = 'flex';
+        document.getElementById('articleCount').textContent = data.length + ' articles';
+        displayNews(data);
+    } catch(e) {
+        document.getElementById('errorMsg').innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>${e.message}`;
+        document.getElementById('errorMsg').style.display = 'block';
+    } finally {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Fetch Latest News';
+    }
+});
+
+function displayNews(articles) {
+    const container = document.getElementById('newsContainer');
+    container.innerHTML = '';
+    if (!articles.length) { container.innerHTML = '<p style="color:var(--text-muted);">No articles match the filter.</p>'; return; }
+
+    articles.forEach((a, i) => {
+        const sClass = a.sentiment.includes('Bullish') ? 'bullish' : a.sentiment.includes('Bearish') ? 'bearish' : 'neutral';
+        const conf   = parseInt(a.confidence) || 50;
+
+        const div = document.createElement('div');
+        div.className = `article-card ${sClass}`;
+        div.innerHTML = `
+            <div class="article-num">ARTICLE ${String(i+1).padStart(2,'0')}</div>
+            <div class="article-title">${a.title}</div>
+            <div class="article-meta">
+                <span class="sentiment-badge ${sClass}">${a.sentiment}</span>
+                <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);">${conf}% confidence</span>
+                <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);">📍 ${a.sector||'General'}</span>
+                ${(a.companies||[]).map(c=>`<span class="company-badge">${c.ticker}</span>`).join('')}
+            </div>
+            <div class="article-analysis">${a.analysis}</div>
+            <div class="confidence-bar"><div class="confidence-fill" style="width:${conf}%"></div></div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// Filters
+document.addEventListener('change', e => {
+    if (!e.target.classList.contains('sentiment-filter')) return;
+    const active = Array.from(document.querySelectorAll('.sentiment-filter:checked')).map(c=>c.value);
+    // update pill opacity
+    ['bull','neut','bear'].forEach(k => {
+        const map = {bull:'Bullish',neut:'Neutral',bear:'Bearish'};
+        const pill = document.getElementById(`pill-${k}`);
+        if (pill) pill.classList.toggle('inactive', !active.includes(map[k]));
+    });
+    if (!window.newsData) return;
+    const filtered = window.newsData.filter(a => active.some(s => a.sentiment.includes(s)));
+    document.getElementById('articleCount').textContent = filtered.length + ' articles';
+    displayNews(filtered);
+});
+</script>
+{% endblock %}

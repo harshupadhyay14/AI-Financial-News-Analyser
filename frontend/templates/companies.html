@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Companies — AI Financial News Analyzer{% endblock %}
+
+{% block extra_css %}
+<style>
+.sector-group { margin-bottom: 2rem; }
+.sector-label {
+    font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 2px;
+    color: var(--text-muted); text-transform: uppercase;
+    margin-bottom: 0.75rem; display: flex; align-items: center; gap: 8px;
+}
+.sector-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+.company-tile {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    transition: all 0.25s;
+    cursor: default;
+}
+.company-tile:hover {
+    border-color: var(--border-hover);
+    box-shadow: var(--glow);
+    transform: translateY(-3px);
+}
+.company-ticker {
+    font-family: var(--font-mono);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.2rem;
+}
+.company-name {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+.company-sector-chip {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(124,58,237,0.12);
+    border: 1px solid rgba(124,58,237,0.25);
+    color: #a78bfa;
+    letter-spacing: 0.5px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title"><i class="fas fa-building me-2"></i>Detected Companies</h1>
+
+<div class="d-flex align-items-center gap-3 mb-4">
+    <button id="loadCompanies" class="btn btn-primary">
+        <i class="fas fa-sync-alt me-2"></i>Load Companies
+    </button>
+    <span id="companiesStatus" style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.82rem;"></span>
+</div>
+
+<div id="companiesLoading" class="loading"><div class="spinner"></div><p>SCANNING FOR COMPANIES...</p></div>
+<div id="companiesError" class="error-message mb-3" style="display:none;"></div>
+
+<div id="companiesContent" style="display:none;">
+    <div id="companiesContainer"></div>
+</div>
+
+<script>
+document.getElementById('loadCompanies').addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+    document.getElementById('companiesLoading').style.display = 'block';
+    document.getElementById('companiesError').style.display   = 'none';
+    document.getElementById('companiesContent').style.display = 'none';
+
+    try {
+        await fetch('/api/news');
+        const res = await fetch('/api/companies');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        displayCompanies(data.companies || []);
+        document.getElementById('companiesContent').style.display = 'block';
+        document.getElementById('companiesStatus').textContent = (data.companies||[]).length + ' tickers found';
+    } catch(e) {
+        document.getElementById('companiesError').innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>${e.message}`;
+        document.getElementById('companiesError').style.display = 'block';
+    } finally {
+        document.getElementById('companiesLoading').style.display = 'none';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Load Companies';
+    }
+});
+
+function displayCompanies(companies) {
+    const container = document.getElementById('companiesContainer');
+    if (!companies.length) {
+        container.innerHTML = '<p style="color:var(--text-muted);">No companies detected. Fetch news first.</p>';
+        return;
+    }
+    // group by sector
+    const sectors = {};
+    companies.forEach(c => {
+        const s = c.sector || 'General';
+        if (!sectors[s]) sectors[s] = [];
+        sectors[s].push(c);
+    });
+
+    container.innerHTML = '';
+    for (const [sector, list] of Object.entries(sectors)) {
+        const group = document.createElement('div');
+        group.className = 'sector-group';
+        group.innerHTML = `<div class="sector-label">📍 ${sector}</div>
+        <div class="row g-3" id="sector-${sector.replace(/\W/g,'_')}"></div>`;
+        container.appendChild(group);
+
+        const row = group.querySelector('.row');
+        list.forEach(c => {
+            const col = document.createElement('div');
+            col.className = 'col-6 col-sm-4 col-md-3 col-lg-2';
+            col.innerHTML = `
+                <div class="company-tile">
+                    <div class="company-ticker">${c.ticker}</div>
+                    <div class="company-name">${c.name}</div>
+                    <span class="company-sector-chip">${c.sector}</span>
+                </div>`;
+            row.appendChild(col);
+        });
+    }
+}
+</script>
+{% endblock %}

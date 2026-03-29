@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — AI Financial News Analyzer{% endblock %}
+
+{% block extra_css %}
+<style>
+.metric-card .metric-icon { background: rgba(0,229,255,0.1); color: var(--accent); }
+.metric-card.m-bull .metric-icon { background: rgba(16,185,129,0.1); color: #10b981; }
+.metric-card.m-bull .metric-number { color: #10b981; }
+.metric-card.m-bear .metric-icon { background: rgba(239,68,68,0.1); color: #ef4444; }
+.metric-card.m-bear .metric-number { color: #ef4444; }
+.metric-card.m-neut .metric-icon { background: rgba(245,158,11,0.1); color: #f59e0b; }
+.metric-card.m-neut .metric-number { color: #f59e0b; }
+
+.sector-row {
+    display: flex; align-items: center; gap: 12px; padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+}
+.sector-row:last-child { border-bottom: none; }
+.sector-name { font-weight: 700; font-size: 0.9rem; min-width: 110px; }
+.sector-bar-wrap { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; display: flex; }
+.sector-bar-bull { background: #10b981; height: 100%; }
+.sector-bar-neut { background: #f59e0b; height: 100%; }
+.sector-bar-bear { background: #ef4444; height: 100%; }
+.sector-stats { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); min-width: 130px; text-align: right; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title"><i class="fas fa-chart-pie me-2"></i>Analytics Dashboard</h1>
+
+<div class="d-flex align-items-center gap-3 mb-4">
+    <button id="loadDashboard" class="btn btn-primary">
+        <i class="fas fa-sync-alt me-2"></i>Load Analytics
+    </button>
+    <span id="dashStatus" style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.82rem;"></span>
+</div>
+
+<div id="dashLoading" class="loading"><div class="spinner"></div><p>LOADING ANALYTICS...</p></div>
+<div id="dashError" class="error-message mb-3" style="display:none;"></div>
+
+<div id="dashboardContent" style="display:none;">
+    <!-- Metric cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="metric-card">
+                <div class="metric-icon"><i class="fas fa-newspaper"></i></div>
+                <div class="metric-number" id="totalArticles">—</div>
+                <div class="metric-label">Total Articles</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card m-bull">
+                <div class="metric-icon"><i class="fas fa-arrow-trend-up"></i></div>
+                <div class="metric-number" id="bullishPercent">—</div>
+                <div class="metric-label">Bullish</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card m-neut">
+                <div class="metric-icon"><i class="fas fa-minus"></i></div>
+                <div class="metric-number" id="neutralPercent">—</div>
+                <div class="metric-label">Neutral</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card m-bear">
+                <div class="metric-icon"><i class="fas fa-arrow-trend-down"></i></div>
+                <div class="metric-number" id="bearishPercent">—</div>
+                <div class="metric-label">Bearish</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-5">
+            <div class="chart-container">
+                <h6 class="mono mb-3" style="color:var(--text-muted);letter-spacing:1px;font-size:0.75rem;">SENTIMENT DISTRIBUTION</h6>
+                <div id="sentimentChart"></div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="chart-container">
+                <h6 class="mono mb-3" style="color:var(--text-muted);letter-spacing:1px;font-size:0.75rem;">SENTIMENT BY COUNT</h6>
+                <div id="sentimentCountChart"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sector breakdown -->
+    <div class="card">
+        <div class="card-header"><i class="fas fa-building text-accent me-2"></i>Sector Sentiment Breakdown</div>
+        <div class="card-body" id="sectorSentimentContainer"></div>
+    </div>
+</div>
+
+<script>
+document.getElementById('loadDashboard').addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+    document.getElementById('dashLoading').style.display = 'block';
+    document.getElementById('dashError').style.display   = 'none';
+    document.getElementById('dashboardContent').style.display = 'none';
+
+    try {
+        await fetch('/api/news');
+        const res = await fetch('/api/metrics');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const m = await res.json();
+        if (m.error) throw new Error(m.error);
+
+        document.getElementById('totalArticles').textContent  = m.total_articles;
+        document.getElementById('bullishPercent').textContent = m.bullish_percentage + '%';
+        document.getElementById('neutralPercent').textContent = m.neutral_percentage + '%';
+        document.getElementById('bearishPercent').textContent = m.bearish_percentage + '%';
+
+        drawPie(m);
+        drawBar(m);
+        drawSectors(m);
+        document.getElementById('dashboardContent').style.display = 'block';
+    } catch(e) {
+        document.getElementById('dashError').innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>${e.message}`;
+        document.getElementById('dashError').style.display = 'block';
+    } finally {
+        document.getElementById('dashLoading').style.display = 'none';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Load Analytics';
+    }
+});
+
+function drawPie(m) {
+    const s = m.sentiment_distribution;
+    Plotly.newPlot('sentimentChart', [{
+        labels: ['Bullish','Neutral','Bearish'],
+        values: [s.bullish, s.neutral, s.bearish],
+        type: 'pie',
+        hole: 0.55,
+        marker: { colors: ['#10b981','#f59e0b','#ef4444'] },
+        textinfo: 'percent',
+        textfont: { color: '#fff', family: 'Space Mono', size: 12 },
+    }], {
+        paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+        height: 300, margin: {t:10,b:10,l:10,r:10},
+        showlegend: true,
+        legend: { font: { color: '#94a3b8', family: 'Space Mono', size: 11 }, bgcolor: 'transparent' },
+        font: { color: '#94a3b8' }
+    }, { responsive: true, displayModeBar: false });
+}
+
+function drawBar(m) {
+    const s = m.sentiment_distribution;
+    Plotly.newPlot('sentimentCountChart', [{
+        x: ['Bullish','Neutral','Bearish'],
+        y: [s.bullish, s.neutral, s.bearish],
+        type: 'bar',
+        marker: {
+            color: ['rgba(16,185,129,0.8)','rgba(245,158,11,0.8)','rgba(239,68,68,0.8)'],
+            line: { color: ['#10b981','#f59e0b','#ef4444'], width: 1 }
+        },
+        text: [s.bullish, s.neutral, s.bearish],
+        textposition: 'outside',
+        textfont: { color: '#e2e8f0', family: 'Space Mono', size: 12 }
+    }], {
+        paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+        height: 300, margin: {t:20,b:30,l:30,r:10},
+        xaxis: { color: '#64748b', gridcolor: 'transparent', tickfont: { family: 'Space Mono', size: 11 } },
+        yaxis: { color: '#64748b', gridcolor: 'rgba(255,255,255,0.05)', tickfont: { family: 'Space Mono', size: 10 } },
+        bargap: 0.4,
+    }, { responsive: true, displayModeBar: false });
+}
+
+function drawSectors(m) {
+    const container = document.getElementById('sectorSentimentContainer');
+    const data = m.sector_sentiment || {};
+    if (!Object.keys(data).length) { container.innerHTML = '<p style="color:var(--text-muted);">No sector data.</p>'; return; }
+    container.innerHTML = '';
+    for (const [sector, s] of Object.entries(data)) {
+        const total = s.bullish + s.neutral + s.bearish || 1;
+        const bp = ((s.bullish/total)*100).toFixed(0);
+        const np = ((s.neutral/total)*100).toFixed(0);
+        const ep = ((s.bearish/total)*100).toFixed(0);
+        const row = document.createElement('div');
+        row.className = 'sector-row';
+        row.innerHTML = `
+            <div class="sector-name">📍 ${sector}</div>
+            <div class="sector-bar-wrap">
+                <div class="sector-bar-bull" style="width:${bp}%"></div>
+                <div class="sector-bar-neut" style="width:${np}%"></div>
+                <div class="sector-bar-bear" style="width:${ep}%"></div>
+            </div>
+            <div class="sector-stats">
+                <span style="color:#10b981;">${s.bullish}B</span> ·
+                <span style="color:#f59e0b;">${s.neutral}N</span> ·
+                <span style="color:#ef4444;">${s.bearish}R</span>
+            </div>`;
+        container.appendChild(row);
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+{% block title %}Chatbot — AI Financial News Analyzer{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Layout ─────────────────────────────────────────────────────── */
+.chat-wrap {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+    height: calc(100vh - 150px);
+    min-height: 560px;
+}
+@media(max-width: 900px) {
+    .chat-wrap { grid-template-columns: 1fr; height: auto; }
+    .sidebar-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-height: none !important; }
+}
+
+/* ── Chat Panel ─────────────────────────────────────────────────── */
+.chat-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+}
+.chat-header {
+    padding: 1.1rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(0,229,255,0.03);
+    flex-shrink: 0;
+}
+.chat-header-title   { font-weight: 700; font-size: 1rem; }
+.chat-header-sub     { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted); letter-spacing: 1.5px; margin-top: 1px; }
+
+.news-badge {
+    margin-left: auto; flex-shrink: 0;
+    font-family: var(--font-mono); font-size: 0.63rem; letter-spacing: 1.5px;
+    padding: 5px 12px; border-radius: 20px; cursor: pointer; transition: all 0.2s;
+}
+.news-badge.loaded   { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #10b981; }
+.news-badge.unloaded { background: rgba(239,68,68,0.12);  border: 1px solid rgba(239,68,68,0.3);  color: #ef4444; }
+
+/* Messages */
+.chat-messages {
+    flex: 1; overflow-y: auto;
+    padding: 1.4rem; display: flex; flex-direction: column; gap: 1.1rem;
+}
+.bubble-wrap      { display: flex; }
+.bubble-wrap.user { justify-content: flex-end; }
+
+.bubble {
+    max-width: 78%; border-radius: 14px;
+    padding: 0.85rem 1.1rem; line-height: 1.65; font-size: 0.9rem;
+}
+.bubble.user {
+    background: linear-gradient(135deg, var(--accent), #0099cc);
+    color: #04080f; font-weight: 600;
+    border-radius: 14px 14px 2px 14px;
+}
+.bubble.bot {
+    background: var(--bg-card-alt);
+    border: 1px solid var(--border); color: var(--text);
+    border-radius: 14px 14px 14px 2px;
+}
+.bubble-label { font-family: var(--font-mono); font-size: 0.63rem; letter-spacing: 1.5px; margin-bottom: 0.4rem; }
+.bubble.user .bubble-label { color: rgba(4,8,15,0.55); }
+.bubble.bot  .bubble-label { color: var(--accent); }
+
+.sources-block {
+    margin-top: 0.75rem; padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 0.73rem; color: var(--text-muted); line-height: 1.7;
+}
+.sources-block strong { color: var(--accent); }
+
+/* Typing */
+.typing-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text-muted); margin: 0 2px;
+    animation: typeBounce 1.2s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typeBounce {
+    0%,60%,100% { transform: translateY(0);   opacity: 0.35; }
+    30%          { transform: translateY(-7px); opacity: 1; }
+}
+
+/* Input */
+.chat-input-row {
+    padding: 1rem 1.2rem;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 10px; flex-shrink: 0;
+}
+.chat-input-row input {
+    flex: 1;
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    color: var(--text) !important;
+    font-family: var(--font-display) !important;
+    padding: 0.65rem 1.1rem !important;
+    font-size: 0.9rem !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.chat-input-row input:focus {
+    border-color: rgba(0,229,255,0.45) !important;
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.08) !important;
+    outline: none;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────── */
+.sidebar-panel {
+    display: flex; 
+    flex-direction: column; 
+    gap: 1rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(100vh - 180px);
+    padding-right: 8px;
+    scroll-behavior: smooth;
+}
+
+/* Scrollbar styling */
+.sidebar-panel::-webkit-scrollbar {
+    width: 6px;
+}
+.sidebar-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar-panel::-webkit-scrollbar-thumb {
+    background: rgba(0, 229, 255, 0.3);
+    border-radius: 3px;
+}
+.sidebar-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 229, 255, 0.6);
+}
+
+/* Data card — compact horizontal style */
+.sb-data-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    flex-shrink: 0;
+}
+.sb-data-card p {
+    color: var(--text-muted); font-size: 0.78rem;
+    line-height: 1.5; margin-bottom: 0.75rem;
+}
+.sb-status {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    margin-top: 0.5rem; min-height: 1rem;
+}
+
+/* Questions card */
+.sb-q-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    flex-shrink: 0;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+/* Scrollbar for questions */
+.sb-q-card::-webkit-scrollbar {
+    width: 5px;
+}
+.sb-q-card::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sb-q-card::-webkit-scrollbar-thumb {
+    background: rgba(0, 229, 255, 0.25);
+    border-radius: 3px;
+}
+.sb-q-card::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 229, 255, 0.5);
+}
+
+.sb-q-header {
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    font-weight: 700; font-size: 0.88rem;
+    display: flex; align-items: center; gap: 8px;
+    position: sticky;
+    top: 0;
+    background: var(--bg-card);
+    z-index: 10;
+}
+.sb-q-header small {
+    font-family: var(--font-mono); font-size: 0.65rem;
+    color: var(--text-muted); letter-spacing: 1px;
+    font-weight: 400; margin-left: auto;
+}
+.sb-q-list { padding: 0.6rem; display: flex; flex-direction: column; gap: 0.4rem; }
+
+.q-btn {
+    display: flex; align-items: center; gap: 9px; width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 0.55rem 0.85rem;
+    font-family: var(--font-display); font-size: 0.82rem; font-weight: 600;
+    color: var(--text); cursor: pointer;
+    transition: all 0.2s; text-align: left;
+    white-space: nowrap;
+}
+.q-btn .q-icon {
+    width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+}
+.q-btn:hover {
+    background: rgba(0,229,255,0.07);
+    border-color: rgba(0,229,255,0.3);
+    color: var(--accent);
+    transform: translateX(3px);
+}
+
+/* How it works */
+.sb-how-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    flex-shrink: 0;
+}
+.sb-how-card h6 { font-size: 0.88rem; font-weight: 700; margin-bottom: 1rem; }
+.how-step {
+    display: flex; gap: 10px; align-items: flex-start;
+    margin-bottom: 0.65rem; font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;
+}
+.how-step:last-child { margin-bottom: 0; }
+.step-num {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.25);
+    color: var(--accent); font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-wrap">
+
+    <!-- ── CHAT PANEL ──────────────────────────────────────────── -->
+    <div class="chat-panel">
+        <div class="chat-header">
+            <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">🤖</div>
+            <div>
+                <div class="chat-header-title">RAG-Powered Market Assistant</div>
+                <div class="chat-header-sub">GROQ · LLAMA · KEYWORD RAG</div>
+            </div>
+            <span id="news-badge" class="news-badge unloaded" onclick="loadNews()">⚠ LOAD NEWS</span>
+        </div>
+
+        <div class="chat-messages" id="chat-messages"></div>
+
+        <div class="chat-input-row">
+            <input type="text" id="chat-input"
+                placeholder="Ask about sentiment, sectors, companies..."
+                onkeypress="if(event.key==='Enter')sendMessage()">
+            <button class="btn btn-primary" onclick="sendMessage()" id="send-btn" style="flex-shrink:0;padding:0.65rem 1.2rem;">
+                Send ➤
+            </button>
+        </div>
+    </div>
+
+    <!-- ── SIDEBAR ────────────────────────────────────────────── -->
+    <div class="sidebar-panel">
+
+        <!-- Example questions FIRST — always visible and scrollable -->
+        <div class="sb-q-card">
+            <div class="sb-q-header">
+                <i class="fas fa-lightbulb" style="color:var(--accent);font-size:0.85rem;"></i>
+                Try Asking
+                <small>CLICK TO SEND</small>
+            </div>
+            <div class="sb-q-list">
+                <button class="q-btn" onclick="ask('Which sectors are showing bullish signals?')">
+                    <div class="q-icon" style="background:rgba(16,185,129,0.12);">📈</div><span>Bullish sectors?</span>
+                </button>
+                <button class="q-btn" onclick="ask('What is the overall market sentiment?')">
+                    <div class="q-icon" style="background:rgba(0,229,255,0.1);">📊</div><span>Market sentiment?</span>
+                </button>
+                <button class="q-btn" onclick="ask('Which tech companies were mentioned?')">
+                    <div class="q-icon" style="background:rgba(124,58,237,0.12);">🏢</div><span>Tech companies?</span>
+                </button>
+                <button class="q-btn" onclick="ask('Are there any bearish signals?')">
+                    <div class="q-icon" style="background:rgba(239,68,68,0.12);">📉</div><span>Bearish signals?</span>
+                </button>
+                <button class="q-btn" onclick="ask('What is happening with energy stocks?')">
+                    <div class="q-icon" style="background:rgba(245,158,11,0.12);">⚡</div><span>Energy stocks?</span>
+                </button>
+                <button class="q-btn" onclick="ask('How is the Fed impacting the market?')">
+                    <div class="q-icon" style="background:rgba(59,130,246,0.12);">🏦</div><span>Fed impact?</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Data loader — compact, no big emoji -->
+        <div class="sb-data-card">
+            <p>Load news to power the knowledge base before asking questions.</p>
+            <button class="btn btn-primary w-100" onclick="loadNews()" id="load-btn">
+                🔄 Load / Refresh News
+            </button>
+            <div class="sb-status" id="load-status"></div>
+        </div>
+
+        <!-- How it works — compact -->
+        <div class="sb-how-card">
+            <h6><i class="fas fa-circle-info" style="color:var(--accent);margin-right:6px;"></i>How It Works</h6>
+            <div class="how-step"><div class="step-num">1</div><span>Click <strong style="color:var(--text);">Load News</strong> to fetch latest headlines</span></div>
+            <div class="how-step"><div class="step-num">2</div><span>Ask any question or click an example above</span></div>
+            <div class="how-step"><div class="step-num">3</div><span>Top 3 relevant articles generate your answer</span></div>
+        </div>
+
+    </div><!-- /sidebar -->
+</div>
+
+<script>
+let newsLoaded = false;
+
+function setBadge(loaded) {
+    const b = document.getElementById('news-badge');
+    b.className = 'news-badge ' + (loaded ? 'loaded' : 'unloaded');
+    b.textContent = loaded ? '✓ NEWS LOADED' : '⚠ LOAD NEWS';
+}
+
+function addMsg(role, text, sources) {
+    const msgs = document.getElementById('chat-messages');
+    const wrap = document.createElement('div');
+    wrap.className = `bubble-wrap ${role}`;
+
+    const bub = document.createElement('div');
+    bub.className = `bubble ${role}`;
+    bub.innerHTML = `<div class="bubble-label">${role === 'user' ? 'YOU' : '🤖 AI ASSISTANT'}</div>` +
+        String(text)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/\*\*(.*?)\*\*/g,'<strong style="color:var(--accent)">$1</strong>')
+            .replace(/\n/g,'<br>');
+
+    if (sources && sources.filter(s => s && s.trim()).length) {
+        const sd = document.createElement('div');
+        sd.className = 'sources-block';
+        sd.innerHTML = '<strong>📰 Sources</strong><br>' +
+            sources.filter(s => s && s.trim()).map((s,i) => `${i+1}. ${s}`).join('<br>');
+        bub.appendChild(sd);
+    }
+    wrap.appendChild(bub);
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addTyping() {
+    const msgs = document.getElementById('chat-messages');
+    const wrap = document.createElement('div');
+    wrap.id = 'typing'; wrap.className = 'bubble-wrap bot';
+    wrap.innerHTML = `<div class="bubble bot" style="padding:1rem 1.25rem;">
+        <div class="bubble-label">🤖 AI ASSISTANT</div>
+        <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+    </div>`;
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function loadNews() {
+    const btn = document.getElementById('load-btn');
+    const status = document.getElementById('load-status');
+    btn.disabled = true; btn.innerHTML = '⏳ Loading...';
+    status.textContent = ''; status.style.color = 'var(--text-muted)';
+    setBadge(false);
+
+    try {
+        const res  = await fetch('/api/news');
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        newsLoaded = true;
+        setBadge(true);
+        btn.innerHTML = `✅ Loaded (${data.length} articles)`;
+        status.style.color = '#10b981';
+        status.textContent = 'Knowledge base ready ✓';
+        addMsg('bot', `✅ Loaded **${data.length} articles** into the knowledge base.\n\nAsk me anything about the market!`, null);
+    } catch(e) {
+        btn.disabled = false;
+        btn.innerHTML = '🔄 Load / Refresh News';
+        status.style.color = '#ef4444';
+        status.textContent = 'Error: ' + e.message;
+        addMsg('bot', '❌ Could not load news: ' + e.message, null);
+    }
+}
+
+async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    addMsg('user', q, null);
+
+    if (!newsLoaded) {
+        addMsg('bot', '⏳ News not loaded — fetching now, then answering...', null);
+        await loadNews();
+        await new Promise(r => setTimeout(r, 300));
+    }
+
+    addTyping();
+    document.getElementById('send-btn').disabled = true;
+
+    try {
+        const res  = await fetch(`/api/ask?query=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        document.getElementById('typing')?.remove();
+        addMsg('bot', data.answer || data.error || 'No answer found.', Array.isArray(data.sources) ? data.sources : []);
+    } catch(e) {
+        document.getElementById('typing')?.remove();
+        addMsg('bot', '❌ Connection error. Is the backend running on port 8000?', null);
+    }
+    document.getElementById('send-btn').disabled = false;
+    input.focus();
+}
+
+function ask(q) { document.getElementById('chat-input').value = q; sendMessage(); }
+
+window.addEventListener('load', async () => {
+    addMsg('bot', "Hello! 👋 I'm your **AI market assistant**.\n\nClick **Load / Refresh News** or any example question on the right to get started!", null);
+    try {
+        const res  = await fetch('/api/metrics');
+        const data = await res.json();
+        if (data.total_articles > 0) {
+            newsLoaded = true; setBadge(true);
+            document.getElementById('load-btn').innerHTML = `✅ Loaded (${data.total_articles} articles)`;
+            document.getElementById('load-status').style.color = '#10b981';
+            document.getElementById('load-status').textContent = 'Knowledge base ready ✓';
+        }
+    } catch(_) {}
+});
+</script>
+{% endblock %}
