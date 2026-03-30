@@ -1,3 +1,10 @@
+![Python](https://img.shields.io/badge/Python-3.10-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
+![LLM](https://img.shields.io/badge/LLM-Groq_LLaMA-purple)
+![Status](https://img.shields.io/badge/Status-Live-success)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+
+
 # 🚀 AI Financial News Analyzer
 An end-to-end AI-powered financial intelligence system that processes real-time news, extracts insights, and enables intelligent querying using a RAG-based chatbot.
 
