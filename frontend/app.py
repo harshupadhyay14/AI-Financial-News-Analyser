@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-BACKEND = os.getenv("BACKEND_API", "http://127.0.0.1:8000")
+BACKEND = os.getenv("BACKEND_API", "https://ai-financial-news-analyser-api.onrender.com")
 
 
 # ── page routes ────────────────────────────────────────────────────────────────
