@@ -1,13 +1,13 @@
-🚀 AI Financial News Analyzer
+# 🚀 AI Financial News Analyzer
 An end-to-end AI-powered financial intelligence system that processes real-time news, extracts insights, and enables intelligent querying using a RAG-based chatbot.
 
-🌐 Live Demo
+# 🌐 Live Demo
 🚀 Frontend App:
 https://ai-financial-news-analyser-frontend.onrender.com
 ⚡ Backend API:
 https://ai-financial-news-analyser-api.onrender.com
 
-📌 Overview
+# 📌 Overview
 The AI Financial News Analyzer leverages LLMs + NLP techniques to transform raw financial news into actionable insights.
 It performs:
 📈 Market sentiment detection (Bullish / Bearish / Neutral)
@@ -15,7 +15,7 @@ It performs:
 📊 Sector-wise analysis
 💬 Context-aware Q&A using Retrieval-Augmented Generation (RAG)
 
-🧠 Key Features
+# 🧠 Key Features
 ✅ Real-time financial news scraping
 ✅ LLM-powered sentiment analysis (Groq LLaMA)
 ✅ Company & ticker extraction using NLP + Regex
@@ -24,7 +24,7 @@ It performs:
 ✅ Full-stack architecture (FastAPI + Flask)
 
 
-🏗️ Tech Stack
+#🏗️ Tech Stack
 🔹 Backend
 Python
 FastAPI
@@ -40,7 +40,7 @@ Plotly
 REST APIs
 Git & GitHub
 
-📂 Project Structure
+#📂 Project Structure
 AI_Financial_News_Analyzer/
 │
 ├── backend/
@@ -58,7 +58,7 @@ AI_Financial_News_Analyzer/
 │
 └── README.md
 
-⚙️ Installation & Setup
+# ⚙️ Installation & Setup
 1️⃣ Clone the Repository
 Bash
 git clone https://github.com/harshupadhyay14/AI-Financial-News-Analyser.git
@@ -78,7 +78,7 @@ Create a .env file:
 
 GROQ_API_KEY=your_api_key_here
 
-▶️ Running the Application
+# ▶️ Running the Application
 🔹 Start Backend
 Bash
 cd backend
@@ -88,7 +88,7 @@ Bash
 cd frontend
 python app.py
 
-📊 Feature Breakdown
+# 📊 Feature Breakdown
 🔹 Sentiment Analysis
 Classifies financial news into:
 📈 Bullish
@@ -104,16 +104,16 @@ Provides source-based responses
 Sector-wise sentiment distribution
 Dynamic charts powered by Plotly
 
-🚀 Deployment
+# 🚀 Deployment
 Backend: Render
 Frontend: Railway
 
-📈 Resume Impact
+# 📈 Resume Impact
 Built a full-stack AI system analyzing real-time financial news using LLMs
 Engineered a RAG-based chatbot with NLP-driven entity extraction
 Developed a production-ready architecture with fast response times (<500ms)
 
-🤝 Contributing
+# 🤝 Contributing
 Contributions are welcome!
 For major changes, please open an issue first to discuss your ideas.
 📬 Contact
