@@ -23,12 +23,12 @@ It performs:
 💬 Context-aware Q&A using Retrieval-Augmented Generation (RAG)
 
 # 🧠 Key Features
-✅ Real-time financial news scraping
-✅ LLM-powered sentiment analysis (Groq LLaMA)
-✅ Company & ticker extraction using NLP + Regex
-✅ RAG-based chatbot with source-aware responses
-✅ Interactive dashboard with Plotly visualizations
-✅ Full-stack architecture (FastAPI + Flask)
+🔹 ✅ Real-time financial news scraping
+🔹 ✅ LLM-powered sentiment analysis (Groq LLaMA)
+🔹 ✅ Company & ticker extraction using NLP + Regex
+🔹 ✅ RAG-based chatbot with source-aware responses
+🔹 ✅ Interactive dashboard with Plotly visualizations
+🔹 ✅ Full-stack architecture (FastAPI + Flask)
 
 
 # 🏗️ Tech Stack
@@ -112,13 +112,13 @@ Sector-wise sentiment distribution
 Dynamic charts powered by Plotly
 
 # 🚀 Deployment
-Backend: Render
-Frontend: Railway
+🔹Backend: Render
+🔹Frontend: Railway
 
 # 📈 Resume Impact
-Built a full-stack AI system analyzing real-time financial news using LLMs
-Engineered a RAG-based chatbot with NLP-driven entity extraction
-Developed a production-ready architecture with fast response times (<500ms)
+🔹Built a full-stack AI system analyzing real-time financial news using LLMs
+🔹Engineered a RAG-based chatbot with NLP-driven entity extraction
+🔹Developed a production-ready architecture with fast response times (<500ms)
 
 # 🤝 Contributing
 Contributions are welcome!
