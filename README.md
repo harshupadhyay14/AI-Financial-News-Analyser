@@ -24,7 +24,7 @@ It performs:
 ✅ Full-stack architecture (FastAPI + Flask)
 
 
-#🏗️ Tech Stack
+# 🏗️ Tech Stack
 🔹 Backend
 Python
 FastAPI
@@ -40,7 +40,7 @@ Plotly
 REST APIs
 Git & GitHub
 
-#📂 Project Structure
+# 📂 Project Structure
 AI_Financial_News_Analyzer/
 │
 ├── backend/
