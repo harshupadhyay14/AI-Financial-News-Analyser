@@ -1,48 +1,45 @@
+🚀 AI Financial News Analyzer
+An end-to-end AI-powered financial intelligence system that processes real-time news, extracts insights, and enables intelligent querying using a RAG-based chatbot.
 
-# 🚀 AI Financial News Analyzer
-
-An end-to-end AI-powered financial intelligence system that analyzes real-time news, detects market sentiment, extracts companies, and answers user queries using a RAG-based chatbot.
+🌐 Live Demo
+🚀 Frontend App:
+https://ai-financial-news-analyser-frontend.onrender.com
+⚡ Backend API:
+https://ai-financial-news-analyser-api.onrender.com
 
 📌 Overview
+The AI Financial News Analyzer leverages LLMs + NLP techniques to transform raw financial news into actionable insights.
+It performs:
+📈 Market sentiment detection (Bullish / Bearish / Neutral)
+🏢 Company & stock ticker extraction
+📊 Sector-wise analysis
+💬 Context-aware Q&A using Retrieval-Augmented Generation (RAG)
 
-This project fetches live financial news and uses LLMs + NLP techniques to generate actionable insights such as:
-
-Market sentiment (Bullish / Bearish / Neutral)
-Company & stock ticker extraction
-Sector-wise analysis
-Context-aware Q&A using RAG
 🧠 Key Features
-
 ✅ Real-time financial news scraping
-✅ Sentiment analysis using LLM (Groq LLaMA)
-✅ Company & stock ticker extraction (NLP-based)
-✅ RAG-powered chatbot with source-aware answers
+✅ LLM-powered sentiment analysis (Groq LLaMA)
+✅ Company & ticker extraction using NLP + Regex
+✅ RAG-based chatbot with source-aware responses
 ✅ Interactive dashboard with Plotly visualizations
 ✅ Full-stack architecture (FastAPI + Flask)
 
+
 🏗️ Tech Stack
-
-Backend:
-
+🔹 Backend
 Python
 FastAPI
 Groq LLaMA (LLM)
 NLP (Regex + Text Processing)
-
-Frontend:
-
+🔹 Frontend
 Flask
 HTML, CSS
-
-Data & Visualization:
-
-Plotly
+🔹 Data & Visualization
 Pandas
-
-Other Tools:
-
+Plotly
+🔹 Tools
 REST APIs
 Git & GitHub
+
 📂 Project Structure
 AI_Financial_News_Analyzer/
 │
@@ -60,57 +57,66 @@ AI_Financial_News_Analyzer/
 │   └── requirements.txt
 │
 └── README.md
+
 ⚙️ Installation & Setup
 1️⃣ Clone the Repository
+Bash
 git clone https://github.com/harshupadhyay14/AI-Financial-News-Analyser.git
 cd AI-Financial-News-Analyser
+
 2️⃣ Create Virtual Environment
+Bash
 python -m venv venv
 venv\Scripts\activate   # Windows
-3️⃣ Install Dependencies
-pip install -r frontend/requirements.txt
-4️⃣ Add Environment Variables
 
+3️⃣ Install Dependencies
+Bash
+pip install -r frontend/requirements.txt
+
+4️⃣ Add Environment Variables
 Create a .env file:
 
 GROQ_API_KEY=your_api_key_here
-5️⃣ Run Backend
+
+▶️ Running the Application
+🔹 Start Backend
+Bash
 cd backend
 uvicorn main:app --reload
-6️⃣ Run Frontend
-
-Open new terminal:
-
+🔹 Start Frontend
+Bash
 cd frontend
 python app.py
-📊 Features Breakdown
+
+📊 Feature Breakdown
 🔹 Sentiment Analysis
+Classifies financial news into:
+📈 Bullish
+📉 Bearish
+⚖️ Neutral
 
-Classifies news into:
-
-Bullish 📈
-Bearish 📉
-Neutral ⚖️
 🔹 RAG Chatbot
 Context-aware answers
-Uses latest news data
+Uses latest scraped news
 Provides source-based responses
-🔹 Dashboard
+
+🔹 Interactive Dashboard
 Sector-wise sentiment distribution
-Interactive charts using Plotly
+Dynamic charts powered by Plotly
+
 🚀 Deployment
 Backend: Render
 Frontend: Railway
+
 📈 Resume Impact
 Built a full-stack AI system analyzing real-time financial news using LLMs
-Engineered RAG-based chatbot with NLP-driven entity extraction
-Deployed production-ready system with sub-500ms response time
+Engineered a RAG-based chatbot with NLP-driven entity extraction
+Developed a production-ready architecture with fast response times (<500ms)
+
 🤝 Contributing
-
-Pull requests are welcome. For major changes, please open an issue first.
-
+Contributions are welcome!
+For major changes, please open an issue first to discuss your ideas.
 📬 Contact
-
 Harsh Upadhyay
-📧 Connect on LinkedIn
-💻 GitHub: https://github.com/harshupadhyay14
+💻 GitHub: https://github.com/harshupadhyay14⁠�
+📧 LinkedIn: https://www.linkedin.com/in/harsh-u-53119124b
