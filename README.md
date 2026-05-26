@@ -8,6 +8,12 @@
 # 🚀 AI Financial News Analyzer
 An end-to-end AI-powered financial intelligence system that processes real-time news, extracts insights, and enables intelligent querying using a RAG-based chatbot.
 
+<img width="959" height="412" alt="Screenshot 2026-05-26 173416" src="https://github.com/user-attachments/assets/9290dd91-6a11-46e5-91c6-b83f144e747e" />
+<img width="960" height="412" alt="Screenshot 2026-05-26 173438" src="https://github.com/user-attachments/assets/49ba0942-90c0-464e-9b4f-a0291968fa68" />
+<img width="960" height="412" alt="Screenshot 2026-05-26 173630" src="https://github.com/user-attachments/assets/bac7f5d6-76c1-4852-8d5e-6ddb782c3b93" />
+<img width="960" height="412" alt="Screenshot 2026-05-26 173714" src="https://github.com/user-attachments/assets/eb133580-24b9-44da-b3e0-906f34c4c379" />
+
+
 # 🌐 Live Demo
 🚀 Frontend App:
 https://ai-financial-news-analyser-frontend.onrender.com
